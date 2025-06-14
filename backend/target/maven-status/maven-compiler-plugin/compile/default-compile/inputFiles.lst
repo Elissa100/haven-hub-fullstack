@@ -1,3 +1,5 @@
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/UserService.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/NotificationRepository.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/AuthController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/security/JwtTokenProvider.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/BookingRequest.java
@@ -5,17 +7,23 @@
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/RoomRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/security/JwtAuthenticationFilter.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/DataInitializer.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/EmailService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/HavenHubApplication.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/SecurityConfig.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/Notification.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/Room.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/FileUploadConfig.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/security/UserPrincipal.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/BookingRepository.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/RoleRepository.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/security/JwtAuthenticationEntryPoint.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/UserRepository.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/UserProfileRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/User.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/NotificationService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/Booking.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/JacksonConfig.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/UserController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/RegisterRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/CustomUserDetailsService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/RoomRepository.java
@@ -24,5 +32,6 @@
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/LoginRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/RoomService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/RoomController.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/NotificationController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/BookingService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/AuthService.java

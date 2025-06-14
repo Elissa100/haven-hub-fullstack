@@ -1,10 +1,10 @@
 package com.havenhub.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "roles")
@@ -22,6 +22,6 @@ public class Role {
     private RoleName name;
 
     public enum RoleName {
-        ADMIN, CUSTOMER
+        ADMIN, CUSTOMER, CLEANER, RECEPTIONIST, MANAGER
     }
 }

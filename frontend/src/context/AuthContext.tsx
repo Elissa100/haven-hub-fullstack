@@ -6,6 +6,8 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber?: string;
+  profileImageUrl?: string;
   roles: string[];
 }
 
@@ -15,6 +17,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
+  hasRole: (role: string) => boolean;
   loading: boolean;
 }
 
@@ -35,23 +38,30 @@ export const useAuth = () => {
   return context;
 };
 
-// Set up axios defaults
-axios.defaults.baseURL = 'http://localhost:8080';
-axios.defaults.timeout = 10000;
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isAdmin = user?.roles?.includes('ADMIN') || false;
+  const hasRole = (role: string) => user?.roles?.includes(role) || false;
 
   useEffect(() => {
+    // Configure axios defaults
+    axios.defaults.baseURL = 'http://localhost:8080';
+    axios.defaults.timeout = 10000;
+
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
-      setUser(JSON.parse(userData));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      try {
+        setUser(JSON.parse(userData));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);
@@ -64,12 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const { accessToken, id, firstName, lastName, roles } = response.data;
-      
+
       const userObj = { id, firstName, lastName, email, roles };
-      
+
       localStorage.setItem('token', accessToken);
       localStorage.setItem('user', JSON.stringify(userObj));
-      
+
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       setUser(userObj);
     } catch (error: any) {
@@ -95,17 +105,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        register,
-        logout,
-        isAdmin,
-        loading,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider
+          value={{
+            user,
+            login,
+            register,
+            logout,
+            isAdmin,
+            hasRole,
+            loading,
+          }}
+      >
+        {children}
+      </AuthContext.Provider>
   );
 };
