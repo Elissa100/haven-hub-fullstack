@@ -19,6 +19,7 @@ interface AuthContextType {
   isAdmin: boolean;
   hasRole: (role: string) => boolean;
   loading: boolean;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 interface RegisterData {
@@ -38,6 +39,21 @@ export const useAuth = () => {
   return context;
 };
 
+// Axios interceptor to handle token refresh and errors
+const setupAxiosInterceptors = (logout: () => void) => {
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Token expired or invalid
+        logout();
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+  );
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,22 +61,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = user?.roles?.includes('ADMIN') || false;
   const hasRole = (role: string) => user?.roles?.includes(role) || false;
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+  };
+
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   useEffect(() => {
     // Configure axios defaults
     axios.defaults.baseURL = 'http://localhost:8080';
     axios.defaults.timeout = 10000;
+
+    // Setup interceptors
+    setupAxiosInterceptors(logout);
 
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
 
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // Verify token is still valid by making a test request
+        axios.get('/users/profile')
+          .then(response => {
+            // Update user data from server
+            const serverUser = response.data;
+            const updatedUser = {
+              id: serverUser.id,
+              firstName: serverUser.firstName,
+              lastName: serverUser.lastName,
+              email: serverUser.email,
+              phoneNumber: serverUser.phoneNumber,
+              profileImageUrl: serverUser.profileImageUrl,
+              roles: parsedUser.roles // Keep roles from token
+            };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          })
+          .catch(() => {
+            // Token is invalid, clear auth data
+            logout();
+          });
       } catch (error) {
         console.error('Error parsing user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        logout();
       }
     }
     setLoading(false);
@@ -97,26 +153,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
-  };
-
   return (
-      <AuthContext.Provider
-          value={{
-            user,
-            login,
-            register,
-            logout,
-            isAdmin,
-            hasRole,
-            loading,
-          }}
-      >
-        {children}
-      </AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        isAdmin,
+        hasRole,
+        loading,
+        updateUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 };
