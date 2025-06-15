@@ -27,6 +27,14 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
       toast.error('Please login to book a room');
       return;
     }
+
+    // Check if user has a valid token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login to book a room');
+      return;
+    }
+
     setIsBookingModalOpen(true);
   };
 
@@ -58,85 +66,88 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
     }
   };
 
+  const handleBookingSuccess = () => {
+    setIsBookingModalOpen(false);
+    onBookingSuccess?.();
+    toast.success('Booking created successfully! Check your notifications for updates.');
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-      <div className="relative">
-        <img
-          src={room.imageUrl || 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'}
-          alt={`Room ${room.roomNumber}`}
-          className="w-full h-48 object-cover"
-          onError={(e) => {
-            e.currentTarget.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
-          }}
-        />
-        <div className="absolute top-4 right-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <div className="relative">
+          <img
+              src={room.imageUrl || 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg'}
+              alt={`Room ${room.roomNumber}`}
+              className="w-full h-48 object-cover"
+              onError={(e) => {
+                e.currentTarget.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
+              }}
+          />
+          <div className="absolute top-4 right-4">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(room.status)}`}>
             {room.status}
           </span>
+          </div>
         </div>
+
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                Room {room.roomNumber}
+              </h3>
+              <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2">
+                {getRoomTypeIcon(room.type)}
+                <span className="ml-1 capitalize">{room.type}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <DollarSign className="h-5 w-5" />
+                {room.price}
+              </div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">per night</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <Wifi className="h-4 w-4 mr-1" />
+                <span>Free WiFi</span>
+              </div>
+              <div className="flex items-center">
+                <Coffee className="h-4 w-4 mr-1" />
+                <span>Coffee</span>
+              </div>
+              <div className="flex items-center">
+                <Car className="h-4 w-4 mr-1" />
+                <span>Parking</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+              onClick={handleBookingClick}
+              disabled={room.status !== 'AVAILABLE'}
+              className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                  room.status === 'AVAILABLE'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              }`}
+          >
+            {room.status === 'AVAILABLE' ? 'Book Now' : 'Not Available'}
+          </button>
+        </div>
+
+        {isBookingModalOpen && (
+            <BookingModal
+                room={room}
+                onClose={() => setIsBookingModalOpen(false)}
+                onSuccess={handleBookingSuccess}
+            />
+        )}
       </div>
-
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-              Room {room.roomNumber}
-            </h3>
-            <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2">
-              {getRoomTypeIcon(room.type)}
-              <span className="ml-1 capitalize">{room.type}</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="flex items-center text-2xl font-bold text-blue-600 dark:text-blue-400">
-              <DollarSign className="h-5 w-5" />
-              {room.price}
-            </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">per night</span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <Wifi className="h-4 w-4 mr-1" />
-              <span>Free WiFi</span>
-            </div>
-            <div className="flex items-center">
-              <Coffee className="h-4 w-4 mr-1" />
-              <span>Coffee</span>
-            </div>
-            <div className="flex items-center">
-              <Car className="h-4 w-4 mr-1" />
-              <span>Parking</span>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={handleBookingClick}
-          disabled={room.status !== 'AVAILABLE'}
-          className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-            room.status === 'AVAILABLE'
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          {room.status === 'AVAILABLE' ? 'Book Now' : 'Not Available'}
-        </button>
-      </div>
-
-      {isBookingModalOpen && (
-        <BookingModal
-          room={room}
-          onClose={() => setIsBookingModalOpen(false)}
-          onSuccess={() => {
-            setIsBookingModalOpen(false);
-            onBookingSuccess?.();
-          }}
-        />
-      )}
-    </div>
   );
 };
 

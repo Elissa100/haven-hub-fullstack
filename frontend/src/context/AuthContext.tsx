@@ -41,16 +41,34 @@ export const useAuth = () => {
 
 // Axios interceptor to handle token refresh and errors
 const setupAxiosInterceptors = (logout: () => void) => {
-  axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response?.status === 401) {
-        // Token expired or invalid
-        logout();
-        window.location.href = '/login';
+  // Request interceptor to add token to all requests
+  axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
       }
-      return Promise.reject(error);
-    }
+  );
+
+  // Response interceptor to handle 401 errors
+  axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Only logout if it's not a login/register request
+          const isAuthRequest = error.config?.url?.includes('/auth/');
+          if (!isAuthRequest) {
+            console.log('401 error detected, logging out user');
+            logout();
+          }
+        }
+        return Promise.reject(error);
+      }
   );
 };
 
@@ -62,10 +80,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hasRole = (role: string) => user?.roles?.includes(role) || false;
 
   const logout = () => {
+    console.log('Logging out user');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    // Redirect to login page
+    window.location.href = '/login';
   };
 
   const updateUser = (userData: Partial<User>) => {
@@ -92,28 +113,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
+
         // Verify token is still valid by making a test request
         axios.get('/users/profile')
-          .then(response => {
-            // Update user data from server
-            const serverUser = response.data;
-            const updatedUser = {
-              id: serverUser.id,
-              firstName: serverUser.firstName,
-              lastName: serverUser.lastName,
-              email: serverUser.email,
-              phoneNumber: serverUser.phoneNumber,
-              profileImageUrl: serverUser.profileImageUrl,
-              roles: parsedUser.roles // Keep roles from token
-            };
-            setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-          })
-          .catch(() => {
-            // Token is invalid, clear auth data
-            logout();
-          });
+            .then(response => {
+              // Update user data from server
+              const serverUser = response.data;
+              const updatedUser = {
+                id: serverUser.id,
+                firstName: serverUser.firstName,
+                lastName: serverUser.lastName,
+                email: serverUser.email,
+                phoneNumber: serverUser.phoneNumber,
+                profileImageUrl: serverUser.profileImageUrl,
+                roles: parsedUser.roles // Keep roles from token
+              };
+              setUser(updatedUser);
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+            })
+            .catch((error) => {
+              // Token is invalid, clear auth data
+              console.log('Token validation failed:', error);
+              if (error.response?.status === 401) {
+                logout();
+              }
+            });
       } catch (error) {
         console.error('Error parsing user data:', error);
         logout();
@@ -154,19 +178,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        register,
-        logout,
-        isAdmin,
-        hasRole,
-        loading,
-        updateUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider
+          value={{
+            user,
+            login,
+            register,
+            logout,
+            isAdmin,
+            hasRole,
+            loading,
+            updateUser,
+          }}
+      >
+        {children}
+      </AuthContext.Provider>
   );
 };
