@@ -29,44 +29,65 @@ public class DataInitializer implements CommandLineRunner {
         // Initialize roles
         initializeRoles();
         
-        // Initialize admin user
-        initializeAdminUser();
+        // Initialize users
+        initializeUsers();
         
         // Initialize sample rooms
         initializeSampleRooms();
     }
     
     private void initializeRoles() {
-        if (roleRepository.findByName(Role.RoleName.ADMIN).isEmpty()) {
-            Role adminRole = new Role();
-            adminRole.setName(Role.RoleName.ADMIN);
-            roleRepository.save(adminRole);
-        }
-        
-        if (roleRepository.findByName(Role.RoleName.CUSTOMER).isEmpty()) {
-            Role customerRole = new Role();
-            customerRole.setName(Role.RoleName.CUSTOMER);
-            roleRepository.save(customerRole);
+        for (Role.RoleName roleName : Role.RoleName.values()) {
+            if (roleRepository.findByName(roleName).isEmpty()) {
+                Role role = new Role();
+                role.setName(roleName);
+                roleRepository.save(role);
+            }
         }
     }
     
-    private void initializeAdminUser() {
+    private void initializeUsers() {
+        // Admin user
         if (!userRepository.existsByEmail("admin@havenhub.com")) {
-            User admin = new User();
-            admin.setFirstName("Admin");
-            admin.setLastName("User");
-            admin.setEmail("admin@havenhub.com");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            
-            Role adminRole = roleRepository.findByName(Role.RoleName.ADMIN)
-                    .orElseThrow(() -> new RuntimeException("Admin role not found"));
-            
-            Set<Role> roles = new HashSet<>();
-            roles.add(adminRole);
-            admin.setRoles(roles);
-            
-            userRepository.save(admin);
+            createUser("Admin", "User", "admin@havenhub.com", "admin123", Role.RoleName.ADMIN);
         }
+        
+        // Manager user
+        if (!userRepository.existsByEmail("manager@havenhub.com")) {
+            createUser("Manager", "User", "manager@havenhub.com", "manager123", Role.RoleName.MANAGER);
+        }
+        
+        // Receptionist user
+        if (!userRepository.existsByEmail("receptionist@havenhub.com")) {
+            createUser("Receptionist", "User", "receptionist@havenhub.com", "receptionist123", Role.RoleName.RECEPTIONIST);
+        }
+        
+        // Cleaner user
+        if (!userRepository.existsByEmail("cleaner@havenhub.com")) {
+            createUser("Cleaner", "User", "cleaner@havenhub.com", "cleaner123", Role.RoleName.CLEANER);
+        }
+        
+        // Customer user
+        if (!userRepository.existsByEmail("customer@havenhub.com")) {
+            createUser("Customer", "User", "customer@havenhub.com", "customer123", Role.RoleName.CUSTOMER);
+        }
+    }
+    
+    private void createUser(String firstName, String lastName, String email, String password, Role.RoleName roleName) {
+        User user = new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new RuntimeException(roleName + " role not found"));
+        
+        Set<Role> roles = new HashSet<>();
+        roles.add(role);
+        user.setRoles(roles);
+        
+        userRepository.save(user);
     }
     
     private void initializeSampleRooms() {

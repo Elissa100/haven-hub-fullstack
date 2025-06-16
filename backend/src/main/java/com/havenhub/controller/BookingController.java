@@ -24,8 +24,8 @@ public class BookingController {
     private final BookingService bookingService;
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all bookings (Admin only)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @Operation(summary = "Get all bookings (Admin/Manager/Receptionist only)")
     public ResponseEntity<List<Booking>> getAllBookings() {
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
@@ -50,8 +50,8 @@ public class BookingController {
     }
     
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update booking status (Admin only)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RECEPTIONIST')")
+    @Operation(summary = "Update booking status (Admin/Manager/Receptionist only)")
     public ResponseEntity<Booking> updateBookingStatus(@PathVariable Long id,
                                                        @RequestParam Booking.BookingStatus status) {
         return ResponseEntity.ok(bookingService.updateBookingStatus(id, status));

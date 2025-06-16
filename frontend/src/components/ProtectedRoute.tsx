@@ -1,14 +1,20 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireRole?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
-  const { user, isAdmin, loading } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  requireAdmin = false, 
+  requireRole 
+}) => {
+  const { user, isAdmin, hasRole, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -19,11 +25,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    // Store the attempted location for redirect after login
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireRole && !hasRole(requireRole) && !isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

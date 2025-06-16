@@ -24,55 +24,70 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    
+
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
-    
+
     public JwtAuthenticationResponse authenticateUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                loginRequest.getEmail(),
-                loginRequest.getPassword()
-            )
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
         );
-        
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
-        
+
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName().name())
                 .collect(Collectors.toList());
-        
-        return new JwtAuthenticationResponse(jwt, user.getId(), user.getFirstName(),
-                user.getLastName(), user.getEmail(), roles);
+
+        return new JwtAuthenticationResponse(
+                jwt,
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                roles
+        );
     }
-    
+
     public String registerUser(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new RuntimeException("Email is already taken!");
         }
-        
+
         User user = new User();
         user.setFirstName(registerRequest.getFirstName());
         user.setLastName(registerRequest.getLastName());
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        
-        Role customerRole = roleRepository.findByName(Role.RoleName.CUSTOMER)
-                .orElseThrow(() -> new RuntimeException("Customer Role not found."));
-        
+
+        // Determine role based on request
+        Role.RoleName resolvedRoleName;
+        try {
+            resolvedRoleName = Role.RoleName.valueOf(registerRequest.getRole().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            resolvedRoleName = Role.RoleName.CUSTOMER;
+        }
+
+        final Role.RoleName finalRoleName = resolvedRoleName;  // make effectively final
+
+        Role userRole = roleRepository.findByName(finalRoleName)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + finalRoleName));
+
         Set<Role> roles = new HashSet<>();
-        roles.add(customerRole);
+        roles.add(userRole);
         user.setRoles(roles);
-        
-        User result = userRepository.save(user);
-        
+
+        userRepository.save(user);
         return "User registered successfully";
     }
 }

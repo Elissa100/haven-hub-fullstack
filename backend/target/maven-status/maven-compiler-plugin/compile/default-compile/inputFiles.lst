@@ -1,3 +1,4 @@
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/ManagerService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/UserService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/NotificationRepository.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/AuthController.java
@@ -5,14 +6,19 @@
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/BookingRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/BookingController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/RoomRequest.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/ReceptionistService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/security/JwtAuthenticationFilter.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/DataInitializer.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/ReceptionistController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/EmailService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/HavenHubApplication.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/CleanerController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/SecurityConfig.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/Notification.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/Room.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/DashboardStatsDto.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/FileUploadConfig.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/ManagerController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/security/UserPrincipal.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/BookingRepository.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/RoleRepository.java
@@ -20,6 +26,7 @@
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/repository/UserRepository.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/UserProfileRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/User.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/CleanerService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/NotificationService.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/entity/Booking.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/config/JacksonConfig.java
