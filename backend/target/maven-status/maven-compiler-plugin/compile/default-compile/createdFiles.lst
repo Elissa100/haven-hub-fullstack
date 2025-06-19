@@ -28,6 +28,7 @@ com/havenhub/entity/Booking.class
 com/havenhub/dto/JwtAuthenticationResponse.class
 com/havenhub/dto/DashboardStatsDto.class
 com/havenhub/controller/UserController.class
+com/havenhub/dto/CreateUserRequest.class
 com/havenhub/entity/Role$RoleName.class
 com/havenhub/entity/Booking$BookingStatus.class
 com/havenhub/service/CleanerService.class

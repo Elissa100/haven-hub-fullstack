@@ -41,4 +41,5 @@
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/RoomController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/controller/NotificationController.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/BookingService.java
+/home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/dto/CreateUserRequest.java
 /home/elissa100/Documents/code/projects/java/HavenHub/backend/src/main/java/com/havenhub/service/AuthService.java

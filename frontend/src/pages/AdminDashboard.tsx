@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Users, Bed, Calendar, DollarSign, Settings, TrendingUp, BarChart3 } from 'lucide-react';
+import { Users, Bed, Calendar, DollarSign, Settings, TrendingUp, BarChart3, UserPlus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import CreateUserModal from '../components/CreateUserModal';
 import toast from 'react-hot-toast';
 
 interface DashboardStats {
@@ -42,6 +43,7 @@ const AdminDashboard: React.FC = () => {
   });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -256,9 +258,16 @@ const AdminDashboard: React.FC = () => {
                 <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-3" />
                 <span className="text-blue-700 dark:text-blue-300 font-medium">Manage Rooms</span>
               </Link>
-              <button className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors w-full text-left">
-                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400 mr-3" />
-                <span className="text-green-700 dark:text-green-300 font-medium">View Reports</span>
+              <button
+                  onClick={() => setShowCreateUserModal(true)}
+                  className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors w-full text-left"
+              >
+                <UserPlus className="h-5 w-5 text-green-600 dark:text-green-400 mr-3" />
+                <span className="text-green-700 dark:text-green-300 font-medium">Create Staff User</span>
+              </button>
+              <button className="flex items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors w-full text-left">
+                <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400 mr-3" />
+                <span className="text-purple-700 dark:text-purple-300 font-medium">View Reports</span>
               </button>
             </div>
           </div>
@@ -368,6 +377,17 @@ const AdminDashboard: React.FC = () => {
             </table>
           </div>
         </div>
+
+        {/* Create User Modal */}
+        {showCreateUserModal && (
+            <CreateUserModal
+                onClose={() => setShowCreateUserModal(false)}
+                onSuccess={() => {
+                  setShowCreateUserModal(false);
+                  fetchDashboardData();
+                }}
+            />
+        )}
       </div>
   );
 };
