@@ -8,13 +8,14 @@ A comprehensive full-stack hotel booking management system built with **Spring B
 - **JWT-based authentication** with secure token management
 - **Multi-role system**: Admin, Customer, Manager, Receptionist, Cleaner
 - **Role-based access control** with protected routes
-- **User registration and login** with validation
+- **Customer self-registration** and **Admin-managed staff accounts**
 
 ### 👤 User Management
-- **Complete user profiles** with personal information
-- **Profile image upload** with file validation
-- **Password change** functionality
-- **User activity tracking**
+- **Customer Self-Registration**: Customers can create their own accounts
+- **Admin User Creation**: Only administrators can create staff accounts (Manager, Receptionist, Cleaner, Admin)
+- **Automated Email Notifications**: New staff receive login credentials via email
+- **Complete user profiles** with personal information and profile image upload
+- **Secure password management** with change functionality
 
 ### 🏠 Room Management
 - **CRUD operations** for rooms (Admin only)
@@ -24,24 +25,51 @@ A comprehensive full-stack hotel booking management system built with **Spring B
 - **Image support** for room galleries
 
 ### 📅 Booking System
+- **Customer Booking**: Only authenticated customers can create bookings
 - **Smart booking creation** with conflict detection
 - **Booking status workflow**: Pending → Approved/Rejected → Completed
 - **Date validation** and availability checking
 - **Booking history** with filtering options
-- **Automatic room locking** for pending/approved bookings
+- **Role-based booking management**: Staff can view and manage all bookings
 
 ### 🔔 Notification System
 - **Real-time in-app notifications** with unread counters
-- **Email notifications** for booking events
+- **Email notifications** for booking events and user creation
 - **Notification polling** every 30 seconds
 - **Mark as read/unread** functionality
 
-### 📊 Admin Dashboard
+### 📊 Role-Based Dashboards
+
+#### 👥 **Admin Dashboard**
 - **Comprehensive analytics** with interactive charts
+- **User management**: Create staff accounts with role assignment
 - **Real-time statistics**: rooms, bookings, occupancy rates
 - **Recent bookings management** with quick actions
-- **Responsive design** for all devices
-- **Visual data representation** using Recharts
+- **Full system control**
+
+#### 👨‍💼 **Manager Dashboard**
+- **Performance analytics** and monitoring
+- **Revenue tracking** and booking trends
+- **Staff activity oversight**
+- **Read-only system configurations**
+
+#### 🛎️ **Receptionist Dashboard**
+- **Guest booking management**
+- **Check-in/check-out processing**
+- **Booking approval workflow**
+- **Guest information access**
+
+#### 🧹 **Cleaner Dashboard**
+- **Assigned room cleaning tasks**
+- **Task status updates** (Pending → In Progress → Completed)
+- **Room maintenance reporting**
+- **Personal task tracking**
+
+#### 🏠 **Customer Interface**
+- **Room browsing** with advanced filtering
+- **Booking creation** and management
+- **Personal booking history**
+- **Profile management**
 
 ### 🎨 Modern UI/UX
 - **Dark/Light mode toggle** with system preference detection
@@ -105,7 +133,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/havenhub
 spring.datasource.username=elissa
 spring.datasource.password=elissa
 
-# Optional: Configure email settings
+# Email configuration (required for user creation notifications)
 spring.mail.host=smtp.gmail.com
 spring.mail.username=your-email@gmail.com
 spring.mail.password=your-app-password
@@ -140,14 +168,59 @@ Once the backend is running, access the Swagger UI at:
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
 - **API Docs**: `http://localhost:8080/v3/api-docs`
 
-## 🔑 Default Credentials
+### Key API Endpoints
 
-### Admin Account
+#### Authentication
+- `POST /auth/login` - User login (all roles)
+- `POST /auth/register` - Customer self-registration
+- `POST /auth/admin/create-user` - Admin creates staff accounts
+
+#### Bookings
+- `GET /bookings` - View all bookings (Admin/Manager/Receptionist)
+- `GET /bookings/my` - Customer's personal bookings
+- `POST /bookings` - Create booking (Customer only)
+- `PUT /bookings/{id}/status` - Update booking status (Staff only)
+
+#### Rooms
+- `GET /rooms` - View all rooms (public)
+- `POST /rooms` - Create room (Admin only)
+- `PUT /rooms/{id}` - Update room (Admin only)
+- `DELETE /rooms/{id}` - Delete room (Admin only)
+
+## 🔑 Default Admin Account
+
+### System Administrator
 - **Email**: `admin@havenhub.com`
 - **Password**: `admin123`
 
-### Test Customer
-Register a new account through the frontend registration form.
+**Note**: This is the only pre-created account. All other users must be:
+- **Customers**: Self-register through the frontend
+- **Staff**: Created by administrators through the admin dashboard
+
+## 🔐 User Account Management
+
+### Customer Registration
+- Customers can register themselves using the `/auth/register` endpoint
+- Only CUSTOMER role is assigned through self-registration
+- Immediate access to booking functionality after registration
+
+### Staff Account Creation
+- **Only administrators** can create staff accounts
+- Available roles: Manager, Receptionist, Cleaner, Admin
+- **Automated process**:
+  1. Admin fills out user details and selects role
+  2. System generates secure random password
+  3. Account is created with specified role
+  4. Email sent to new user with login credentials
+  5. User prompted to change password on first login
+
+### Email Notifications
+Staff account creation triggers automatic email containing:
+- Login email address
+- Generated password
+- Assigned role
+- Login URL
+- Instructions to change password
 
 ## 📁 Project Structure
 
@@ -175,42 +248,53 @@ havenhub/
 └── README.md
 ```
 
-## 🎯 Key Features Explained
+## 🎯 Role-Based Access Control
 
-### Role-Based Access Control
-- **Admin/Manager**: Full system access, room management, all bookings
-- **Receptionist**: View bookings, update booking statuses
-- **Cleaner**: View assigned rooms, update cleaning status
-- **Customer**: Personal bookings and profile management
+### Access Permissions
 
-### Smart Booking System
-- **Conflict Detection**: Prevents double-booking of rooms
-- **Status Workflow**: Automated status transitions
-- **Email Integration**: Automatic notifications for all booking events
-- **Real-time Updates**: Instant UI updates for booking changes
+| Feature | Customer | Cleaner | Receptionist | Manager | Admin |
+|---------|----------|---------|--------------|---------|-------|
+| Self Registration | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Create Bookings | ✅ | ❌ | ❌ | ❌ | ❌ |
+| View Own Bookings | ✅ | ❌ | ❌ | ❌ | ❌ |
+| View All Bookings | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Manage Bookings | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Cleaning Tasks | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Analytics Dashboard | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Room Management | ❌ | ❌ | ❌ | ❌ | ✅ |
+| User Creation | ❌ | ❌ | ❌ | ❌ | ✅ |
 
-### Advanced Dashboard
-- **Interactive Charts**: Room status distribution, booking trends
-- **Real-time Stats**: Live occupancy rates and system metrics
-- **Quick Actions**: Direct access to common admin tasks
-- **Responsive Design**: Optimized for all screen sizes
+### Navigation & Redirects
+After login, users are automatically redirected based on their role:
+- **Customer** → `/rooms` (booking interface)
+- **Cleaner** → `/cleaner` (cleaning dashboard)
+- **Receptionist** → `/receptionist` (booking management)
+- **Manager** → `/manager` (analytics dashboard)
+- **Admin** → `/admin` (full admin dashboard)
 
 ## 🔧 Configuration Options
 
-### File Upload
-- **Profile Images**: Stored in `uploads/profile_pictures/`
-- **Max File Size**: 10MB
-- **Supported Formats**: JPG, PNG, GIF
+### Email Settings
+Email notifications require SMTP configuration:
+```properties
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
 
-### Email Notifications
-- **SMTP Configuration**: Gmail, Outlook, or custom SMTP
-- **Templates**: Customizable email templates
-- **Events**: Booking creation, status updates, cancellations
+### Security Settings
+```properties
+# JWT Configuration
+jwt.secret=your-secret-key
+jwt.expiration=86400000  # 24 hours
 
-### Security
-- **JWT Expiration**: 24 hours (configurable)
-- **Password Encryption**: BCrypt with salt
-- **CORS**: Configured for frontend domain
+# File Upload
+spring.servlet.multipart.max-file-size=10MB
+file.upload-dir=uploads
+```
 
 ## 🚀 Deployment
 
@@ -255,4 +339,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**HavenHub** - Making hotel management simple, efficient, and modern. 🏨✨
+**HavenHub** - Professional hotel management with role-based access control and automated workflows. 🏨✨

@@ -66,4 +66,31 @@ public class EmailService {
             log.error("Failed to send booking status update email to: {}", toEmail, e);
         }
     }
+
+    public void sendUserCreationEmail(String toEmail, String userName, String password, String role) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("Welcome to HavenHub - Your Account Details");
+            message.setText(String.format(
+                    "Dear %s,\n\n" +
+                            "Welcome to HavenHub! Your account has been created by the administrator.\n\n" +
+                            "Account Details:\n" +
+                            "Email: %s\n" +
+                            "Password: %s\n" +
+                            "Role: %s\n\n" +
+                            "Please log in to the system and change your password immediately for security purposes.\n\n" +
+                            "Login URL: http://localhost:5173/login\n\n" +
+                            "Best regards,\n" +
+                            "HavenHub Team",
+                    userName, toEmail, password, role
+            ));
+
+            mailSender.send(message);
+            log.info("User creation email sent to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send user creation email to: {}", toEmail, e);
+        }
+    }
 }
