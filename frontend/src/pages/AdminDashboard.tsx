@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Users, Bed, Calendar, DollarSign, Settings, TrendingUp, BarChart3, UserPlus } from 'lucide-react';
+import { Users, Bed, Calendar, DollarSign, Settings, TrendingUp, BarChart3, UserPlus, LogOut } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import CreateUserModal from '../components/CreateUserModal';
 import toast from 'react-hot-toast';
@@ -26,10 +26,11 @@ interface Booking {
     roomNumber: string;
     type: string;
   };
-  checkInDate: string;
-  checkOutDate: string;
+  startDateTime: string;
+  endDateTime: string;
   status: string;
   createdAt: string;
+  totalAmount: number;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -82,8 +83,13 @@ const AdminDashboard: React.FC = () => {
           .slice(0, 5);
 
       setRecentBookings(sortedBookings);
-    } catch (error) {
-      toast.error('Failed to fetch dashboard data');
+    } catch (error: any) {
+      console.error('Dashboard data fetch error:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to fetch dashboard data');
+      }
     } finally {
       setLoading(false);
     }
@@ -94,9 +100,35 @@ const AdminDashboard: React.FC = () => {
       await axios.put(`/bookings/${bookingId}/status?status=${status}`);
       toast.success(`Booking ${status.toLowerCase()} successfully`);
       fetchDashboardData();
-    } catch (error) {
-      toast.error('Failed to update booking status');
+    } catch (error: any) {
+      console.error('Update booking status error:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to update booking status');
+      }
     }
+  };
+
+  const initiateCheckout = async (bookingId: number) => {
+    try {
+      await axios.post(`/bookings/${bookingId}/checkout`);
+      toast.success('Checkout initiated successfully');
+      fetchDashboardData();
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to initiate checkout');
+      }
+    }
+  };
+
+  const canCheckout = (booking: Booking) => {
+    const now = new Date();
+    const endTime = new Date(booking.endDateTime);
+    return now >= endTime && (booking.status === 'APPROVED');
   };
 
   const getStatusColor = (status: string) => {
@@ -107,16 +139,20 @@ const AdminDashboard: React.FC = () => {
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'checked_out':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -317,6 +353,9 @@ const AdminDashboard: React.FC = () => {
                   Dates
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -346,30 +385,51 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {formatDate(booking.checkInDate)} - {formatDate(booking.checkOutDate)}
+                      <div>{formatDateTime(booking.startDateTime)}</div>
+                      <div className="text-gray-500 dark:text-gray-400">to</div>
+                      <div>{formatDateTime(booking.endDateTime)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      ${booking.totalAmount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status)}`}>
-                      {booking.status}
+                      {booking.status.replace('_', ' ')}
                     </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {booking.status === 'PENDING' && (
-                          <div className="flex space-x-2">
+                      <div className="flex space-x-2">
+                        {booking.status === 'PENDING' && (
+                            <>
+                              <button
+                                  onClick={() => updateBookingStatus(booking.id, 'APPROVED')}
+                                  className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                  onClick={() => updateBookingStatus(booking.id, 'REJECTED')}
+                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200"
+                              >
+                                Reject
+                              </button>
+                            </>
+                        )}
+                        {canCheckout(booking) && (
                             <button
-                                onClick={() => updateBookingStatus(booking.id, 'APPROVED')}
-                                className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200"
+                                onClick={() => initiateCheckout(booking.id)}
+                                className="flex items-center text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-200"
                             >
-                              Approve
+                              <LogOut className="h-3 w-3 mr-1" />
+                              Checkout
                             </button>
-                            <button
-                                onClick={() => updateBookingStatus(booking.id, 'REJECTED')}
-                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                      )}
+                        )}
+                        {booking.status === 'APPROVED' && !canCheckout(booking) && (
+                            <span className="text-gray-500 dark:text-gray-400 text-xs">
+                            Checkout available after {formatDateTime(booking.endDateTime)}
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
               ))}

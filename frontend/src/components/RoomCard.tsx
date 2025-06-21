@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import BookingModal from './BookingModal';
-import { MapPin, DollarSign, Users, Wifi, Coffee, Car } from 'lucide-react';
+import { MapPin, DollarSign, Users, Wifi, Coffee, Car, Clock } from 'lucide-react';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 
 interface Room {
@@ -21,6 +22,32 @@ interface RoomCardProps {
 const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
   const { user } = useAuth();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isRoomBooked, setIsRoomBooked] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    checkRoomBookingStatus();
+  }, [room.id]);
+
+  const checkRoomBookingStatus = async () => {
+    try {
+      setLoading(true);
+      // Check if room has any active bookings
+      const response = await axios.get(`/bookings`);
+      const bookings = response.data;
+      
+      const activeBooking = bookings.find((booking: any) => 
+        booking.room.id === room.id && 
+        (booking.status === 'APPROVED' || booking.status === 'PENDING')
+      );
+      
+      setIsRoomBooked(!!activeBooking);
+    } catch (error) {
+      console.error('Error checking room booking status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBookingClick = () => {
     if (!user) {
@@ -28,10 +55,14 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
       return;
     }
 
-    // Check if user has a valid token
     const token = localStorage.getItem('token');
     if (!token) {
       toast.error('Please login to book a room');
+      return;
+    }
+
+    if (isRoomBooked) {
+      toast.error('This room is currently booked or pending approval');
       return;
     }
 
@@ -69,8 +100,32 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
   const handleBookingSuccess = () => {
     setIsBookingModalOpen(false);
     onBookingSuccess?.();
+    checkRoomBookingStatus(); // Refresh booking status
     toast.success('Booking created successfully! Check your notifications for updates.');
   };
+
+  const isBookingDisabled = () => {
+    return room.status !== 'AVAILABLE' || isRoomBooked || loading;
+  };
+
+  const getBookingButtonText = () => {
+    if (loading) return 'Checking...';
+    if (room.status !== 'AVAILABLE') return 'Not Available';
+    if (isRoomBooked) return 'Currently Booked';
+    return 'Book Now';
+  };
+
+  const getBookingButtonReason = () => {
+    if (room.status !== 'AVAILABLE') {
+      return `Room is currently ${room.status.toLowerCase()}`;
+    }
+    if (isRoomBooked) {
+      return 'This room is currently booked or pending approval';
+    }
+    return '';
+  };
+
+  const hourlyRate = room.price / 24;
 
   return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -106,7 +161,11 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
                 <DollarSign className="h-5 w-5" />
                 {room.price}
               </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">per night</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">per day</span>
+              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <Clock className="h-3 w-3 mr-1" />
+                ${hourlyRate.toFixed(2)}/hour
+              </div>
             </div>
           </div>
 
@@ -127,16 +186,24 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
             </div>
           </div>
 
+          {getBookingButtonReason() && (
+              <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                  {getBookingButtonReason()}
+                </p>
+              </div>
+          )}
+
           <button
               onClick={handleBookingClick}
-              disabled={room.status !== 'AVAILABLE'}
+              disabled={isBookingDisabled()}
               className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                  room.status === 'AVAILABLE'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  isBookingDisabled()
+                      ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
           >
-            {room.status === 'AVAILABLE' ? 'Book Now' : 'Not Available'}
+            {getBookingButtonText()}
           </button>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Calendar, Clock, DollarSign, MapPin, X } from 'lucide-react';
+import { Calendar, Clock, DollarSign, MapPin, X, CreditCard, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Booking {
@@ -18,10 +18,13 @@ interface Booking {
     price: number;
     imageUrl?: string;
   };
-  checkInDate: string;
-  checkOutDate: string;
+  startDateTime: string;
+  endDateTime: string;
   status: string;
   createdAt: string;
+  totalAmount: number;
+  isPaid: boolean;
+  checkedOutAt?: string;
 }
 
 const BookingHistory: React.FC = () => {
@@ -36,8 +39,13 @@ const BookingHistory: React.FC = () => {
     try {
       const response = await axios.get('http://localhost:8080/bookings/my');
       setBookings(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch bookings');
+    } catch (error: any) {
+      console.error('Fetch bookings error:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to fetch bookings');
+      }
     } finally {
       setLoading(false);
     }
@@ -49,8 +57,28 @@ const BookingHistory: React.FC = () => {
         await axios.delete(`http://localhost:8080/bookings/${bookingId}`);
         toast.success('Booking cancelled successfully');
         fetchBookings();
-      } catch (error) {
-        toast.error('Failed to cancel booking');
+      } catch (error: any) {
+        console.error('Cancel booking error:', error);
+        if (error.response?.data?.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error('Failed to cancel booking');
+        }
+      }
+    }
+  };
+
+  const completePayment = async (bookingId: number) => {
+    try {
+      await axios.post(`http://localhost:8080/bookings/${bookingId}/pay`);
+      toast.success('Payment completed successfully!');
+      fetchBookings();
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to complete payment');
       }
     }
   };
@@ -67,24 +95,40 @@ const BookingHistory: React.FC = () => {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
       case 'completed':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'checked_out':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
-  const calculateNights = (checkIn: string, checkOut: string) => {
-    const startDate = new Date(checkIn);
-    const endDate = new Date(checkOut);
-    const timeDiff = endDate.getTime() - startDate.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24));
+  const calculateDuration = (startDateTime: string, endDateTime: string) => {
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+    const diffInMs = end.getTime() - start.getTime();
+    const hours = Math.ceil(diffInMs / (1000 * 60 * 60));
+    
+    if (hours < 24) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      return `${days} day${days > 1 ? 's' : ''}${remainingHours > 0 ? ` ${remainingHours}h` : ''}`;
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  };
+
+  const isCheckoutRequired = (booking: Booking) => {
+    return booking.status === 'CHECKED_OUT' && !booking.isPaid;
   };
 
   if (loading) {
@@ -119,8 +163,7 @@ const BookingHistory: React.FC = () => {
       ) : (
         <div className="space-y-6">
           {bookings.map((booking) => {
-            const nights = calculateNights(booking.checkInDate, booking.checkOutDate);
-            const totalPrice = nights * booking.room.price;
+            const duration = calculateDuration(booking.startDateTime, booking.endDateTime);
 
             return (
               <div key={booking.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -143,18 +186,23 @@ const BookingHistory: React.FC = () => {
                           {booking.room.type} Room
                         </p>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
-                          {booking.status}
+                          {booking.status.replace('_', ' ')}
                         </span>
                       </div>
                       
                       <div className="text-right">
                         <div className="flex items-center text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                           <DollarSign className="h-5 w-5" />
-                          {totalPrice}
+                          {booking.totalAmount.toFixed(2)}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {nights} night{nights > 1 ? 's' : ''}
+                          {duration}
                         </p>
+                        {booking.isPaid && (
+                          <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
+                            ✓ Paid
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -164,7 +212,7 @@ const BookingHistory: React.FC = () => {
                         <div>
                           <p className="text-sm">Check-in</p>
                           <p className="font-semibold text-gray-900 dark:text-white">
-                            {formatDate(booking.checkInDate)}
+                            {formatDateTime(booking.startDateTime)}
                           </p>
                         </div>
                       </div>
@@ -174,7 +222,7 @@ const BookingHistory: React.FC = () => {
                         <div>
                           <p className="text-sm">Check-out</p>
                           <p className="font-semibold text-gray-900 dark:text-white">
-                            {formatDate(booking.checkOutDate)}
+                            {formatDateTime(booking.endDateTime)}
                           </p>
                         </div>
                       </div>
@@ -182,23 +230,43 @@ const BookingHistory: React.FC = () => {
 
                     <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm mb-4">
                       <Clock className="h-4 w-4 mr-1" />
-                      Booked on {formatDate(booking.createdAt)}
+                      Booked on {formatDateTime(booking.createdAt)}
                     </div>
+
+                    {isCheckoutRequired(booking) && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg mb-4">
+                        <p className="text-yellow-800 dark:text-yellow-200 font-semibold mb-2">
+                          Payment Required
+                        </p>
+                        <p className="text-yellow-700 dark:text-yellow-300 text-sm mb-3">
+                          Your booking period has ended. Please complete payment to finalize checkout.
+                        </p>
+                        <button
+                          onClick={() => completePayment(booking.id)}
+                          className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                        >
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Pay ${booking.totalAmount.toFixed(2)}
+                        </button>
+                      </div>
+                    )}
 
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         Booking ID: #{booking.id}
                       </div>
                       
-                      {(booking.status === 'PENDING' || booking.status === 'APPROVED') && (
-                        <button
-                          onClick={() => cancelBooking(booking.id)}
-                          className="flex items-center px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel Booking
-                        </button>
-                      )}
+                      <div className="flex space-x-2">
+                        {(booking.status === 'PENDING' || booking.status === 'APPROVED') && (
+                          <button
+                            onClick={() => cancelBooking(booking.id)}
+                            className="flex items-center px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Cancel Booking
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -3,16 +3,16 @@ package com.havenhub.dto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class BookingRequest {
-    @NotNull
+    @NotNull(message = "Room ID is required")
     private Long roomId;
     
-    @NotNull
-    private LocalDate checkInDate;
+    @NotNull(message = "Start date and time is required")
+    private LocalDateTime startDateTime;
     
-    @NotNull
-    private LocalDate checkOutDate;
+    @NotNull(message = "End date and time is required")
+    private LocalDateTime endDateTime;
 }

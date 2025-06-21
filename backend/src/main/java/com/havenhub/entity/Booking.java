@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,17 +31,32 @@ public class Booking {
     private Room room;
 
     @Column(nullable = false)
-    private LocalDate checkInDate;
+    private LocalDateTime startDateTime;
 
     @Column(nullable = false)
-    private LocalDate checkOutDate;
+    private LocalDateTime endDateTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status;
 
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalAmount;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime checkedOutAt;
+
+    @Column
+    private Boolean isPaid = false;
+
+    @Column
+    private Boolean earlyCheckoutRequested = false;
+
+    @Column
+    private String earlyCheckoutReason;
 
     @PrePersist
     public void prePersist() {
@@ -49,9 +64,15 @@ public class Booking {
         if (this.status == null) {
             this.status = BookingStatus.PENDING;
         }
+        if (this.isPaid == null) {
+            this.isPaid = false;
+        }
+        if (this.earlyCheckoutRequested == null) {
+            this.earlyCheckoutRequested = false;
+        }
     }
 
     public enum BookingStatus {
-        PENDING, APPROVED, REJECTED, CANCELLED, COMPLETED
+        PENDING, APPROVED, REJECTED, CANCELLED, COMPLETED, CHECKED_OUT
     }
 }

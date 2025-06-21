@@ -51,6 +51,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     axios.defaults.baseURL = 'http://localhost:8080';
     axios.defaults.timeout = 10000;
 
+    // Add request interceptor for better logging
+    axios.interceptors.request.use(
+      (config) => {
+        console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
+        return config;
+      },
+      (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+      }
+    );
+
+    // Add response interceptor for better error handling
+    axios.interceptors.response.use(
+      (response) => {
+        console.log(`Response from ${response.config.url}:`, response.status);
+        return response;
+      },
+      (error) => {
+        console.error('Response error:', error);
+        
+        if (error.response) {
+          // Server responded with error status
+          console.error('Error data:', error.response.data);
+          console.error('Error status:', error.response.status);
+          console.error('Error headers:', error.response.headers);
+        } else if (error.request) {
+          // Request was made but no response received
+          console.error('No response received:', error.request);
+        } else {
+          // Something else happened
+          console.error('Error message:', error.message);
+        }
+        
+        return Promise.reject(error);
+      }
+    );
+
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
@@ -58,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setUser(JSON.parse(userData));
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log('User restored from localStorage:', JSON.parse(userData));
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('token');
@@ -69,10 +108,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login for email:', email);
+      
       const response = await axios.post('/auth/login', {
         email,
         password,
       });
+
+      console.log('Login response:', response.data);
 
       const { accessToken, id, firstName, lastName, roles } = response.data;
       
@@ -83,22 +126,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       setUser(userObj);
+      
+      console.log('Login successful for user:', userObj);
     } catch (error: any) {
       console.error('Login error:', error);
-      throw new Error(error.response?.data?.message || 'Invalid credentials');
+      
+      let errorMessage = 'Login failed';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied';
+      } else if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+        errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
     }
   };
 
   const register = async (userData: RegisterData) => {
     try {
+      console.log('Attempting registration for email:', userData.email);
+      
       await axios.post('/auth/register', userData);
+      
+      console.log('Registration successful');
     } catch (error: any) {
       console.error('Registration error:', error);
-      throw new Error(error.response?.data?.message || 'Registration failed');
+      
+      let errorMessage = 'Registration failed';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Email already exists or invalid data';
+      } else if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+        errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
     }
   };
 
   const logout = () => {
+    console.log('Logging out user');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
