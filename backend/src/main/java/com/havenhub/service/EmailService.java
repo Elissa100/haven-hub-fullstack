@@ -24,7 +24,7 @@ public class EmailService {
     public void sendBookingConfirmation(String toEmail, String customerName, String roomNumber, String startTime, String endTime) {
         try {
             log.info("Sending booking confirmation email to: {}", toEmail);
-            
+
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
@@ -52,7 +52,7 @@ public class EmailService {
     public void sendBookingStatusUpdate(String toEmail, String customerName, String roomNumber, String status) {
         try {
             log.info("Sending booking status update email to: {}", toEmail);
-            
+
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
@@ -78,7 +78,7 @@ public class EmailService {
     public void sendUserCreationEmail(String toEmail, String userName, String password, String role) {
         try {
             log.info("Sending user creation email to: {}", toEmail);
-            
+
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
@@ -104,18 +104,18 @@ public class EmailService {
         }
     }
 
-    public void sendCheckoutNotificationWithPayslip(String toEmail, String customerName, String roomNumber, 
-                                                   String totalAmount, byte[] payslipPdf) {
+    public void sendCheckoutNotificationWithPayslip(String toEmail, String customerName, String roomNumber,
+                                                    String totalAmount, byte[] payslipPdf) {
         try {
             log.info("Sending checkout notification with payslip to: {}", toEmail);
-            
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            
+
             helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject("Checkout Required - Payment Due - HavenHub");
-            
+
             String emailBody = String.format(
                     "Dear %s,\n\n" +
                             "Your booking period has ended and checkout is now required.\n\n" +
@@ -130,12 +130,12 @@ public class EmailService {
                             "HavenHub Team",
                     customerName, roomNumber, totalAmount
             );
-            
+
             helper.setText(emailBody);
-            
+
             // Attach payslip PDF
             helper.addAttachment("HavenHub_Invoice.pdf", new ByteArrayResource(payslipPdf));
-            
+
             mailSender.send(message);
             log.info("Checkout notification with payslip sent successfully to: {}", toEmail);
         } catch (Exception e) {

@@ -53,45 +53,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Add request interceptor for better logging
     axios.interceptors.request.use(
-      (config) => {
-        console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
-        return config;
-      },
-      (error) => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
-      }
+        (config) => {
+          console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
+          return config;
+        },
+        (error) => {
+          console.error('Request error:', error);
+          return Promise.reject(error);
+        }
     );
 
     // Add response interceptor for better error handling
     axios.interceptors.response.use(
-      (response) => {
-        console.log(`Response from ${response.config.url}:`, response.status);
-        return response;
-      },
-      (error) => {
-        console.error('Response error:', error);
-        
-        if (error.response) {
-          // Server responded with error status
-          console.error('Error data:', error.response.data);
-          console.error('Error status:', error.response.status);
-          console.error('Error headers:', error.response.headers);
-        } else if (error.request) {
-          // Request was made but no response received
-          console.error('No response received:', error.request);
-        } else {
-          // Something else happened
-          console.error('Error message:', error.message);
+        (response) => {
+          console.log(`Response from ${response.config.url}:`, response.status);
+          return response;
+        },
+        (error) => {
+          console.error('Response error:', error);
+
+          if (error.response) {
+            // Server responded with error status
+            console.error('Error data:', error.response.data);
+            console.error('Error status:', error.response.status);
+            console.error('Error headers:', error.response.headers);
+          } else if (error.request) {
+            // Request was made but no response received
+            console.error('No response received:', error.request);
+          } else {
+            // Something else happened
+            console.error('Error message:', error.message);
+          }
+
+          return Promise.reject(error);
         }
-        
-        return Promise.reject(error);
-      }
     );
 
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       console.log('Attempting login for email:', email);
-      
+
       const response = await axios.post('/auth/login', {
         email,
         password,
@@ -118,21 +118,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Login response:', response.data);
 
       const { accessToken, id, firstName, lastName, roles } = response.data;
-      
+
       const userObj = { id, firstName, lastName, email, roles };
-      
+
       localStorage.setItem('token', accessToken);
       localStorage.setItem('user', JSON.stringify(userObj));
-      
+
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       setUser(userObj);
-      
+
       console.log('Login successful for user:', userObj);
     } catch (error: any) {
       console.error('Login error:', error);
-      
+
       let errorMessage = 'Login failed';
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.status === 401) {
@@ -144,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       throw new Error(errorMessage);
     }
   };
@@ -152,15 +152,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: RegisterData) => {
     try {
       console.log('Attempting registration for email:', userData.email);
-      
+
       await axios.post('/auth/register', userData);
-      
+
       console.log('Registration successful');
     } catch (error: any) {
       console.error('Registration error:', error);
-      
+
       let errorMessage = 'Registration failed';
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.status === 400) {
@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       throw new Error(errorMessage);
     }
   };
@@ -184,18 +184,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        register,
-        logout,
-        isAdmin,
-        hasRole,
-        loading,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider
+          value={{
+            user,
+            login,
+            register,
+            logout,
+            isAdmin,
+            hasRole,
+            loading,
+          }}
+      >
+        {children}
+      </AuthContext.Provider>
   );
 };

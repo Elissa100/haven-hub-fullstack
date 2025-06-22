@@ -55,7 +55,7 @@ public class BookingController {
     @Operation(summary = "Create new booking (Customer only)")
     public ResponseEntity<Booking> createBooking(@Valid @RequestBody BookingRequest bookingRequest,
                                                  @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        log.info("Request to create booking for user ID: {} and room ID: {}", 
+        log.info("Request to create booking for user ID: {} and room ID: {}",
                 userPrincipal.getId(), bookingRequest.getRoomId());
         return ResponseEntity.ok(bookingService.createBooking(bookingRequest, userPrincipal.getId()));
     }
@@ -95,7 +95,7 @@ public class BookingController {
     public ResponseEntity<Boolean> checkRoomAvailability(@PathVariable Long roomId,
                                                          @RequestParam LocalDateTime startDateTime,
                                                          @RequestParam LocalDateTime endDateTime) {
-        log.info("Request to check availability for room ID: {} from {} to {}", 
+        log.info("Request to check availability for room ID: {} from {} to {}",
                 roomId, startDateTime, endDateTime);
         boolean isAvailable = bookingService.isRoomAvailable(roomId, startDateTime, endDateTime);
         return ResponseEntity.ok(isAvailable);

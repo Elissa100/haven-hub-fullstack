@@ -35,12 +35,12 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBookingSuccess }) => {
       // Check if room has any active bookings
       const response = await axios.get(`/bookings`);
       const bookings = response.data;
-      
-      const activeBooking = bookings.find((booking: any) => 
-        booking.room.id === room.id && 
-        (booking.status === 'APPROVED' || booking.status === 'PENDING')
+
+      const activeBooking = bookings.find((booking: any) =>
+          booking.room.id === room.id &&
+          (booking.status === 'APPROVED' || booking.status === 'PENDING')
       );
-      
+
       setIsRoomBooked(!!activeBooking);
     } catch (error) {
       console.error('Error checking room booking status:', error);

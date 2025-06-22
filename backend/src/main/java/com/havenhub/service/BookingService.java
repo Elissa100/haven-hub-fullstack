@@ -57,7 +57,7 @@ public class BookingService {
 
     public Booking createBooking(BookingRequest bookingRequest, Long userId) {
         log.info("Creating booking for user ID: {} and room ID: {}", userId, bookingRequest.getRoomId());
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.error("User not found with ID: {}", userId);
@@ -136,7 +136,7 @@ public class BookingService {
 
     public Booking updateBookingStatus(Long id, Booking.BookingStatus status) {
         log.info("Updating booking status for ID: {} to status: {}", id, status);
-        
+
         Booking booking = getBookingById(id);
         booking.setStatus(status);
         Booking updatedBooking = bookingRepository.save(booking);
@@ -168,7 +168,7 @@ public class BookingService {
 
     public void deleteBooking(Long id) {
         log.info("Deleting booking with ID: {}", id);
-        
+
         Booking booking = getBookingById(id);
 
         // Create cancellation notification
@@ -186,7 +186,7 @@ public class BookingService {
 
     public Booking initiateCheckout(Long bookingId, CheckoutRequest checkoutRequest) {
         log.info("Initiating checkout for booking ID: {}", bookingId);
-        
+
         Booking booking = getBookingById(bookingId);
         LocalDateTime now = LocalDateTime.now();
 
@@ -195,10 +195,10 @@ public class BookingService {
             log.info("Early checkout requested for booking ID: {}", bookingId);
             booking.setEarlyCheckoutRequested(true);
             booking.setEarlyCheckoutReason(checkoutRequest.getReason());
-            
+
             // Notify admins about early checkout request
             // This would require admin approval logic
-            
+
             return bookingRepository.save(booking);
         }
 
@@ -231,16 +231,16 @@ public class BookingService {
 
         booking.setStatus(Booking.BookingStatus.CHECKED_OUT);
         Booking updatedBooking = bookingRepository.save(booking);
-        
+
         log.info("Checkout initiated successfully for booking ID: {}", bookingId);
         return updatedBooking;
     }
 
     public Booking completePayment(Long bookingId) {
         log.info("Completing payment for booking ID: {}", bookingId);
-        
+
         Booking booking = getBookingById(bookingId);
-        
+
         if (!booking.getStatus().equals(Booking.BookingStatus.CHECKED_OUT)) {
             log.warn("Payment attempted for booking not in CHECKED_OUT status: {}", bookingId);
             throw new RuntimeException("Booking is not ready for payment");
@@ -248,14 +248,14 @@ public class BookingService {
 
         booking.setIsPaid(true);
         booking.setStatus(Booking.BookingStatus.COMPLETED);
-        
+
         // Make room available again
         Room room = booking.getRoom();
         room.setStatus(Room.RoomStatus.AVAILABLE);
         roomRepository.save(room);
 
         Booking updatedBooking = bookingRepository.save(booking);
-        
+
         // Send completion notification
         notificationService.createNotification(
                 booking.getCustomer(),

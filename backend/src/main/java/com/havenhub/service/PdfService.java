@@ -6,7 +6,7 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.properties.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +19,7 @@ public class PdfService {
 
     public byte[] generatePayslip(Booking booking) {
         log.info("Generating payslip for booking ID: {}", booking.getId());
-        
+
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PdfWriter writer = new PdfWriter(baos);
@@ -31,7 +31,7 @@ public class PdfService {
                     .setTextAlignment(TextAlignment.CENTER)
                     .setFontSize(20)
                     .setBold());
-            
+
             document.add(new Paragraph("PAYMENT INVOICE")
                     .setTextAlignment(TextAlignment.CENTER)
                     .setFontSize(16)
@@ -82,10 +82,10 @@ public class PdfService {
                     .setTextAlignment(TextAlignment.CENTER));
 
             document.close();
-            
+
             log.info("Payslip generated successfully for booking ID: {}", booking.getId());
             return baos.toByteArray();
-            
+
         } catch (Exception e) {
             log.error("Error generating payslip for booking ID: {}", booking.getId(), e);
             throw new RuntimeException("Failed to generate payslip: " + e.getMessage());
