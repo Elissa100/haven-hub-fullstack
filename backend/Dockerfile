@@ -1,15 +1,20 @@
-# Use an official OpenJDK image
-FROM openjdk:17-jdk-slim
+# Use Maven image to build the project
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy and build the app
-COPY . /app
-RUN ./mvnw clean package -DskipTests
+COPY backend/pom.xml .
+COPY backend/src ./src
 
-# Expose the port
+RUN mvn clean package -DskipTests
+
+# Use a slim Java image to run the app
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# Copy built jar from the build stage
+COPY --from=build /app/target/havenhub-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
-
-# Run the jar
-CMD ["java", "-jar", "target/havenhub-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "app.jar"]
