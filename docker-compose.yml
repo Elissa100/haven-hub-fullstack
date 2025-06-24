@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/havenhub
+      SPRING_DATASOURCE_USERNAME: elissa
+      SPRING_DATASOURCE_PASSWORD: elissa
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: havenhub
+      POSTGRES_USER: elissa
+      POSTGRES_PASSWORD: elissa
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
